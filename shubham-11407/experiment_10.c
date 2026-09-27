@@ -12,7 +12,12 @@ int main() {
         case '+': printf("Result = %d\n", a + b); break;
         case '-': printf("Result = %d\n", a - b); break;
         case '*': printf("Result = %d\n", a * b); break;
-        case '/': printf("Result = %d\n", a / b); break;
+        case '/':
+            if (b == 0)
+                printf("Error: Division by zero is not allowed.\n");
+            else
+                printf("Result = %d\n", a / b);
+            break;
         default: printf("Invalid operator\n");
     }
     return 0;
