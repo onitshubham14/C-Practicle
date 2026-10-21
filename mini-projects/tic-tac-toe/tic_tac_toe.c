@@ -1,12 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
+
+#define COLOR_RESET "\033[0m"
+#define COLOR_CYAN  "\033[1;36m"
+#define COLOR_RED   "\033[1;31m"
 
 char board[3][3];
 int player1Score = 0;
 int player2Score = 0;
 int drawScore = 0;
 
-// Function declarations
+void clearScreen();
 void initializeBoard();
 void displayBoard();
 int isValidMove(int choice);
@@ -18,8 +23,9 @@ void playGame();
 int main() {
     char playAgain;
 
+    clearScreen();
     printf("===================================================\n");
-    printf("         WELCOME TO TIC-TAC-TOE (C GAME)           \n");
+    printf("           WELCOME TO TIC-TAC-TOE (C GAME)          \n");
     printf("===================================================\n");
 
     do {
@@ -37,6 +43,7 @@ int main() {
 
     } while (playAgain == 'Y');
 
+    clearScreen();
     printf("\nThanks for playing Tic-Tac-Toe! Final Scores:\n");
     printf("Player 1: %d | Player 2: %d | Draws: %d\n", player1Score, player2Score, drawScore);
     printf("Goodbye!\n");
@@ -44,7 +51,14 @@ int main() {
     return 0;
 }
 
-// Resets board squares to '1' through '9'
+void clearScreen() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
 void initializeBoard() {
     int count = 1;
     for (int i = 0; i < 3; i++) {
@@ -55,22 +69,31 @@ void initializeBoard() {
     }
 }
 
-// Displays 3x3 game board grid
 void displayBoard() {
+    clearScreen();
     printf("\n");
     printf("     |     |     \n");
-    printf("  %c  |  %c  |  %c  \n", board[0][0], board[0][1], board[0][2]);
-    printf("_____|_____|_____\n");
-    printf("     |     |     \n");
-    printf("  %c  |  %c  |  %c  \n", board[1][0], board[1][1], board[1][2]);
-    printf("_____|_____|_____\n");
-    printf("     |     |     \n");
-    printf("  %c  |  %c  |  %c  \n", board[2][0], board[2][1], board[2][2]);
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (j == 0) printf("  ");
+            
+            if (board[i][j] == 'X') {
+                printf(COLOR_CYAN "%c" COLOR_RESET, board[i][j]);
+            } else if (board[i][j] == 'O') {
+                printf(COLOR_RED "%c" COLOR_RESET, board[i][j]);
+            } else {
+                printf("%c", board[i][j]);
+            }
+
+            if (j < 2) printf("  |  ");
+            else printf("  \n");
+        }
+        if (i < 2) printf("_____|_____|_____\n     |     |     \n");
+    }
     printf("     |     |     \n");
     printf("\n");
 }
 
-// Checks if selected cell choice is valid and unoccupied
 int isValidMove(int choice) {
     if (choice < 1 || choice > 9) return 0;
 
@@ -78,31 +101,26 @@ int isValidMove(int choice) {
     int col = (choice - 1) % 3;
 
     if (board[row][col] == 'X' || board[row][col] == 'O') {
-        return 0; // Already occupied
+        return 0;
     }
     return 1;
 }
 
-// Places player mark on chosen cell
 void makeMove(int choice, char mark) {
     int row = (choice - 1) / 3;
     int col = (choice - 1) % 3;
     board[row][col] = mark;
 }
 
-// Evaluates 3 rows, 3 columns, and 2 diagonals for win condition
 int checkWin() {
-    // Check Rows
     for (int i = 0; i < 3; i++) {
         if (board[i][0] == board[i][1] && board[i][1] == board[i][2])
             return 1;
     }
-    // Check Columns
     for (int i = 0; i < 3; i++) {
         if (board[0][i] == board[1][i] && board[1][i] == board[2][i])
             return 1;
     }
-    // Check Diagonals
     if (board[0][0] == board[1][1] && board[1][1] == board[2][2])
         return 1;
 
@@ -112,19 +130,17 @@ int checkWin() {
     return 0;
 }
 
-// Checks if all positions are filled without a win
 int checkDraw() {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             if (board[i][j] != 'X' && board[i][j] != 'O') {
-                return 0; // Empty cell still exists
+                return 0;
             }
         }
     }
     return 1;
 }
 
-// Main game logic loop for a single round
 void playGame() {
     int currentPlayer = 1;
     int choice;
@@ -137,11 +153,16 @@ void playGame() {
         displayBoard();
         
         mark = (currentPlayer == 1) ? 'X' : 'O';
-        printf("Player %d (%c), enter position (1-9): ", currentPlayer, mark);
+        
+        if (mark == 'X') {
+            printf("Player %d (" COLOR_CYAN "%c" COLOR_RESET "), enter position (1-9): ", currentPlayer, mark);
+        } else {
+            printf("Player %d (" COLOR_RED "%c" COLOR_RESET "), enter position (1-9): ", currentPlayer, mark);
+        }
 
         if (scanf("%d", &choice) != 1) {
             printf("  [Error] Invalid input! Please enter a number between 1 and 9.\n");
-            while (getchar() != '\n'); // Clear buffer
+            while (getchar() != '\n');
             continue;
         }
 
@@ -154,17 +175,20 @@ void playGame() {
 
         if (checkWin()) {
             displayBoard();
-            printf("🎉 CONGRATULATIONS! Player %d (%c) wins this round!\n", currentPlayer, mark);
+            if (mark == 'X') {
+                printf("CONGRATULATIONS! Player %d (" COLOR_CYAN "%c" COLOR_RESET ") wins this round!\n", currentPlayer, mark);
+            } else {
+                printf("CONGRATULATIONS! Player %d (" COLOR_RED "%c" COLOR_RESET ") wins this round!\n", currentPlayer, mark);
+            }
             if (currentPlayer == 1) player1Score++;
             else player2Score++;
             gameOver = 1;
         } else if (checkDraw()) {
             displayBoard();
-            printf("🤝 IT'S A DRAW! Good game both players.\n");
+            printf("IT'S A DRAW! Good game both players.\n");
             drawScore++;
             gameOver = 1;
         } else {
-            // Switch turn
             currentPlayer = (currentPlayer == 1) ? 2 : 1;
         }
     }
